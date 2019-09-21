@@ -1,0 +1,122 @@
+---
+title: "CS 422 Section 01"
+output: html_notebook
+author: Zhongzhu Ding
+---
+
+## Homework 3(p1)
+
+Perform K-means clustering on file19.txt on the above web page. This file contains a multivariate mammals
+dataset; there are 9 columns and 66 rows.
+(a) Data cleanup
+(i) Think of what attributes, if any, you may want to omit from the dataset when you do the clustering. Indicate all of the attributes you removed before doing the clustering.
+(ii) Does the data need to be standardized?
+(iii) You will have to clean the data to remove multiple spaces and make the comma character the delimiter.
+Please make sure you include your cleaned dataset in the archive file you upload
+
+### Part 2.1-A-i
+
+```{r}
+library(cluster)
+setwd("/users/enrique/desktop/IITstudy/CS422 Data mining/hw/hw3")
+#skip straight to the table
+mammals <- read.table("file19.txt",skip =20,header = T) 
+#omit the attributes from the datasets
+mammals.cp <- mammals[,-c(5,7,9)]
+
+```
+(i)I omit the attributes c,p and m from the dataset because they got less difference in the tooth distribution than the first group (I,i)
+
+### Part 2.1-A-ii
+(ii)No, it doesn't need to be standardized because the attributes's value are in the same small ranges.
+
+### Part 2.1-A-iii
+```{r}
+#remove multiple spaces, make the swlimiter and output.
+mammals.cp$Name <- trimws(mammals.cp$Name)
+write.table(mammals.cp,"mammals.csv",sep = ",") 
+```
+
+(iii)the cleaned dataset is included in the archive file.
+
+
+b) Clustering
+(i) Determine how many clusters are needed by running the WSS or Silhouette graph. Plot the graph using
+fviz_nbclust().
+(ii) Once you have determined the number of clusters, run k-means clustering on the dataset to create that many clusters. Plot the clusters using fviz_cluster().
+(iii) How many observations are in each cluster?
+(iv) What is the total SSE of the clusters?
+(v) What is the SSE of each cluster?
+(vi) Perform an analysis of each cluster to determine how the mammals are grouped in each cluster, and whether that makes sense?
+assuming k is the variable that holds the output of the kmeans() function call.
+
+### Part 2.1-B-i
+```{r}
+library(factoextra)
+fviz_nbclust(mammals.cp[2:6],kmeans,method="wss")
+fviz_nbclust(mammals.cp[2:6],kmeans,method="silhouette")
+
+```
+
+(i)Considering both of the WSS and Silhouette graphs,we can see that 10 clusters is the best choice.
+
+### Part 2.1-B-ii
+```{r}
+k <- kmeans(mammals.cp[2:6],centers = 10,nstart = 25)
+
+fviz_cluster(k,data = mammals.cp[2:6])
+```
+
+### Part 2.1-B-iii
+```{r}
+k
+```
+
+(iii)the number of observations from cluster1 to cluster10 are 7, 8, 11, 1, 11, 9, 2, 1, 10, 6.
+
+### Part 2.1-B-(iv)
+```{r}
+bd = mammals.cp[,-1]
+wss = kmeans(bd, centers=1)$tot.withinss
+
+for (i in 2:10)
+  wss[i] = kmeans(bd, centers=i)$tot.withinss
+
+library(ggvis)
+sse = data.frame(c(1:10), c(wss))
+names(sse)[1] = 'Clusters'
+names(sse)[2] = 'SSE'
+sse %>%
+  ggvis(~Clusters, ~SSE) %>%
+  layer_points(fill := 'blue') %>% 
+  layer_lines() %>%
+  set_options(height = 300, width = 400)
+```
+### Part 2.1-B-(iv)
+```{r}
+sum(sse)
+```
+
+(iv)the SSEtotal=SSE1+SSE2+...+SSE10=1242.768
+
+### Part 2.1-B-(v)
+```{r}
+sse
+```
+
+(v)the SSE in each cluster are listed in the diagram above.
+
+### Part 2.1-B-(vi)
+```{r}
+which(k$cluster == 1)
+which(k$cluster == 2)
+which(k$cluster == 3)
+which(k$cluster == 4)
+which(k$cluster == 5)
+which(k$cluster == 6)
+which(k$cluster == 7)
+which(k$cluster == 8)
+which(k$cluster == 9)
+which(k$cluster == 10)
+```
+(vi)Taking cluster1 as an example,the indices of the animals are [2 3 4 5 32 37 57],which refers to Hairy tail mole,Common mole,Star nose mole,Brown bat,Coyote,Raccoon and Peccary.All of number distribution in attributes are pretty similar.Just as the example of cluster1,by comparing the number in 5 attributes,the mammals' grouping makes sense.

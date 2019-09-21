@@ -1,0 +1,106 @@
+---
+title: "CS 422 Section 01"
+output: html_notebook
+author: Zhongzhu Ding
+---
+
+## Homework 3(p2)
+
+### Part 2.2-A
+(a) Run hierarchical clustering on the dataset using factoextra::eclust() method. Run the clustering algorithm for three linkages: single, complete, and average. Plot the dendogram associated with each linkage using fviz_dend(). Make sure that the labels (country names) are visible at the leafs of the dendogram.
+
+```{r}
+rm(list = ls())
+setwd("/users/enrique/desktop/IITstudy/CS422 Data mining/hw/hw3")
+#skip straight to the table
+language <- read.table("file46.txt",skip =17,header = T) 
+rownames(language) <-language[,1]
+language <- language[,-1]
+```
+
+```{r}
+library(factoextra)
+L.single <- eclust(language[,1:12],"hclust",hc_method="single") 
+fviz_dend(L.single,main = "Cluster Dendrogram (single)")
+
+L.complete <- eclust(language[,1:12],"hclust",hc_method="complete") 
+fviz_dend(L.complete,main = "Cluster Dendrogram (complete)")
+
+L.average <- eclust(language[,1:12],"hclust",hc_method="average") 
+fviz_dend(L.average,main = "Cluster Dendrogram (average)")
+```
+### Part 2.2-B
+(b) Examine each graph produced in (a) and understand the dendrogram. Notice which countries are clustered together as two-singleton clusters (i.e., two countries clustered together because they are very close to each other in the shared languages/s). For each linkage method, list all the two singleton clusters. For instance, {Great Britain, Ireland} form a two-singleton cluster since they share English as a common language.
+
+Answer:all the two singleton clusters in the single linkage method:
+{Great Britan,Ireland},{Germany,Australia},{Luxemburg,Switherland},{France,Belgium},{Norway,Denmark}
+
+all the two singleton clusters in the complete linkage method:
+{Germany,Australia}{Luxemburg,Switherland},{Norway,Denmark},{Great Britan,Ireland},{France,Belgium}
+
+all the two singleton clusters in the average linkage method:
+{Portugal,Spain},{Germany,Australia}{Luxemburg,Switherland},{Norway,Denmark},{Great Britan,Ireland},{France,Belgium}
+
+### Part 2.2-C
+(c) Italy is clustered with a larger cluster in the single and average linkage, whereas in complete linkage it is clustered with a smaller cluster. Which linkage strategy do you think accurately reflects how Italy should be clustered? (Hint: Look at the raw data.) Justify your answer in 1-2 sentences.
+
+Answer:Average strategy accurately reflects how Italy should be clustered.because Italy has a lot of extrem values like 0 and 100,which will get easily influenced if using single or complete methods.
+
+### Part 2.2-D
+(d) Let’s pick a hierarchical cluster that we will call pure, and let’s define purity as the linkage strategy that produces the most two-singleton clusters. Of the linkage methods you examined in (b), which linkage method would be considered pure by our definition?
+
+Answer:Of the linkage methods I examined in (b), average linkage method would be considered pure bu our definition because it got more singleton clusters than the other two methods.
+
+### Part 2.2-E
+(e) Using the graph corresponding to the linkage method you chose in (d), at at a height of about 125, how many clusters would you have?
+
+
+```{r}
+clusters <- cutree(L.average,h = 125)
+table(clusters)
+```
+
+Answer:From the table above,we have 7 clusters at the height of 125.
+
+### Part 2.2-F
+(f) Now, using the number of clusters you picked in (e), re-run the hierarchical clustering using the three linkage modes again, except this time through, specify the number of clusters using the k parameter to
+factoextra::eclust(). Plot the dendogram associated with each linkage using fviz_dend(). Make sure that the labels (country names) are visible at the leafs of the dendogram.
+
+
+```{r}
+L.single_k<- eclust(language[,1:12],"hclust",k = 7,hc_method="single") 
+fviz_dend(L.single_k,main = "Cluster Dendrogram (single)")
+
+L.complete_k<- eclust(language[,1:12],"hclust",k = 7,hc_method="complete") 
+fviz_dend(L.complete_k,main = "Cluster Dendrogram (complete)")
+
+L.average_k<- eclust(language[,1:12],"hclust",k = 7,hc_method="average") 
+fviz_dend(L.average_k,main = "Cluster Dendrogram (average)")
+```
+
+(g) For each cluster obtained by the value of k used in (f), print the Dunn and Silhouette width using the fpc::cluster.stats() method. Take a look at the help (or manual) page for fpc::cluster.stats() and see what is the name of the return list component that contains the Dunn index and the average Silhouette width.
+
+### Part 2.2-G
+```{r}
+library(fpc)
+stats.single <- cluster.stats(dist(language),clustering = cutree(L.single_k,h=125))
+stats.single$dunn
+stats.single$clus.avg.silwidths
+
+stats.complete <- cluster.stats(dist(language),clustering = cutree(L.complete_k,h=125))
+stats.complete$dunn
+stats.complete$clus.avg.silwidths
+
+stats.average <- cluster.stats(dist(language),clustering = cutree(L.average_k,h=125))
+stats.average$dunn
+stats.average$clus.avg.silwidths
+```
+### Part 2.2-H
+h) From the three clusters in (g), which is the best cluster obtained if you consider the Dunn index only?
+
+Answer: For a given assignment of clusters, a higher Dunn index indicates better clustering,and the value 0.807345 is the largest.Therefore,the cluster of average modes is the best cluster.
+
+### Part 2.2-i
+(i) From the three clusters in (g), which is the best cluster obtained if you consider the Silhouette width only?
+
+Answer:Because high value indicates that the object is well matched to its own cluster and poorly matched to neighboring clusters.The first group has the most large value,so the the cluster of single modes is the best cluster.
